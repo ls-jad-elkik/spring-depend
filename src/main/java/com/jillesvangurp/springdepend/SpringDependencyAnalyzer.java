@@ -170,7 +170,13 @@ public class SpringDependencyAnalyzer {
     }
 
     public String beanGraphCypher() {
-        return getBeanGraph().toCypher("Bean", "DEPENDSON", s -> s.replace(".", "_").replace("-", "__"));
+        return getBeanGraph().toCypher("Bean", "DEPENDSON", s ->
+            s
+                    .replace(".", "_")
+                    .replace("-", "__")
+                    .replace("$", "___")
+                    .replace("#", "____")
+        );
     }
 
     public void printReport(Class<?> springConfigurationClass) {
