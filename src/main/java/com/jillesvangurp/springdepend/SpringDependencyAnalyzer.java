@@ -41,6 +41,16 @@ public class SpringDependencyAnalyzer {
     }
 
     /**
+     * This constructor can be useful for contexts like:
+     *   - spring-web's org.springframework.web.context.support.XmlWebApplicationContext
+     *
+     * @param context create your spring context the usual way and inject it here.
+     */
+    public SpringDependencyAnalyzer(ConfigurableListableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+
+    /**
      * Long lists of dependencies indicate low cohesiveness and high coupling. This helps you identify the problematic beans.
      *
      * @return map of dependencies for all beans in the context
