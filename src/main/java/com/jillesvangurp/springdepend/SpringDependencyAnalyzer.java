@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.support.AbstractRefreshableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
 import java.lang.annotation.Annotation;
@@ -20,13 +21,33 @@ import static java.util.stream.Collectors.toMap;
  * Spring dependency analyzer that works with any GenericApplicationContext.
  */
 public class SpringDependencyAnalyzer {
-    private final GenericApplicationContext context;
+    private final ConfigurableListableBeanFactory beanFactory;
 
     /**
      * @param context create your spring context the usual way and inject it here.
      */
     public SpringDependencyAnalyzer(GenericApplicationContext context) {
-        this.context = context;
+        this.beanFactory = context.getBeanFactory();
+    }
+
+    /**
+     * This constructor can be useful for contexts like:
+     *   - spring-web's org.springframework.web.context.support.XmlWebApplicationContext
+     *
+     * @param context create your spring context the usual way and inject it here.
+     */
+    public SpringDependencyAnalyzer(AbstractRefreshableApplicationContext context) {
+        this.beanFactory = context.getBeanFactory();
+    }
+
+    /**
+     * This constructor can be useful for contexts like:
+     *   - spring-web's org.springframework.web.context.support.XmlWebApplicationContext
+     *
+     * @param context create your spring context the usual way and inject it here.
+     */
+    public SpringDependencyAnalyzer(ConfigurableListableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 
     /**
@@ -36,7 +57,7 @@ public class SpringDependencyAnalyzer {
      */
     public Map<String, Set<String>> getBeanDependencies() {
         Map<String, Set<String>> beanDeps = new TreeMap<>();
-        ConfigurableListableBeanFactory factory = context.getBeanFactory();
+        final ConfigurableListableBeanFactory factory = beanFactory;
         for (String beanName : factory.getBeanDefinitionNames()) {
             if (factory.getBeanDefinition(beanName).isAbstract()) {
                 continue;
@@ -159,7 +180,13 @@ public class SpringDependencyAnalyzer {
     }
 
     public String beanGraphCypher() {
-        return getBeanGraph().toCypher("Bean", "DEPENDSON", s -> s.replace(".", "_").replace("-", "__"));
+        return getBeanGraph().toCypher("Bean", "DEPENDSON", s ->
+            s
+                    .replace(".", "_")
+                    .replace("-", "__")
+                    .replace("$", "___")
+                    .replace("#", "____")
+        );
     }
 
     public void printReport(Class<?> springConfigurationClass) {
